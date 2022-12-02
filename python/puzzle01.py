@@ -9,7 +9,7 @@ def total_for_top_three(cals_per_elf):
 
 
 if __name__ == "__main__":
-    input01 = open("input01").read()
+    input01 = open("../input/input01").read()
     max_calories = max(calories_per_elf(input01))
     print(f"(p1 answer) elf with most calories has: {max_calories}") # 72070
 
