@@ -1,11 +1,11 @@
 
-def split_compartments(knapsack):
-    halfway = len(knapsack) // 2
-    return (knapsack[:halfway], knapsack[halfway:])
+def split_compartments(rucksack):
+    halfway = len(rucksack) // 2
+    return (rucksack[:halfway], rucksack[halfway:])
 
 
-def find_erroneous_item(knapsack):
-    first_half, second_half = split_compartments(knapsack)
+def find_erroneous_item(rucksack):
+    first_half, second_half = split_compartments(rucksack)
     items_in_common = set(first_half).intersection(set(second_half))
     if len(items_in_common) == 1:
         return list(items_in_common)[0]
@@ -24,19 +24,19 @@ def get_priority(item):
         raise ValueError(f"invalid item: '{item}'")
 
 
-def knapsacks_from_input(input_string):
+def rucksacks_from_input(input_string):
     return [x for x in input_string.split("\n") if x != ""]
 
 
-def sum_of_priorities(knapsacks):
-    return sum([get_priority(find_erroneous_item(k)) for k in knapsacks])
+def sum_of_priorities(rucksacks):
+    return sum([get_priority(find_erroneous_item(k)) for k in rucksacks])
 
 
 if __name__ == "__main__":
     input03 = open("../input/input03").read()
 
-    knapsacks = knapsacks_from_input(input03)
-    priority_total = sum_of_priorities(knapsacks)
+    rucksacks = rucksacks_from_input(input03)
+    priority_total = sum_of_priorities(rucksacks)
     print(f"(p1 answer) sum of priorities: {priority_total}") # 7967
 
 
@@ -53,16 +53,16 @@ CrZsJsPPZsGzwwsLwLmpwMDw
 
 
 def test_split_compartments():
-    knapsack = "vJrwpWtwJgWrhcsFMMfFFhFp"
+    rucksack = "vJrwpWtwJgWrhcsFMMfFFhFp"
     expected = ("vJrwpWtwJgWr", "hcsFMMfFFhFp")
-    actual = split_compartments(knapsack)
+    actual = split_compartments(rucksack)
     assert expected == actual
 
 
 def test_find_erroneous_item():
-    knapsack = "vJrwpWtwJgWrhcsFMMfFFhFp"
+    rucksack = "vJrwpWtwJgWrhcsFMMfFFhFp"
     expected = "p"
-    actual = find_erroneous_item(knapsack)
+    actual = find_erroneous_item(rucksack)
     assert expected == actual
 
 
@@ -84,7 +84,7 @@ def test_get_priority():
         assert expected == actual
 
 
-def test_knapsacks_from_input():
+def test_rucksacks_from_input():
     expected = [
         "vJrwpWtwJgWrhcsFMMfFFhFp",
         "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
@@ -93,11 +93,11 @@ def test_knapsacks_from_input():
         "ttgJtRGJQctTZtZT",
         "CrZsJsPPZsGzwwsLwLmpwMDw",
     ]
-    actual = knapsacks_from_input(SAMPLE_INPUT)
+    actual = rucksacks_from_input(SAMPLE_INPUT)
     assert expected == actual
 
 
 def test_sum_of_priorities():
     expected = 157
-    actual = sum_of_priorities(knapsacks_from_input(SAMPLE_INPUT))
+    actual = sum_of_priorities(rucksacks_from_input(SAMPLE_INPUT))
     assert expected == actual
