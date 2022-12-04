@@ -14,7 +14,17 @@ def does_one_range_fully_contain_the_other(one, two): # lol naming
         return True
     elif two[0] >= one[0] and two[1] <= one[1]:
         return True
+    
     return False
+
+
+def do_ranges_overlap(one, two):
+    if one[0] > two[1]:
+        return False
+    elif one[1] < two[0]:
+        return False
+
+    return True
 
 
 def count_fully_contained_ranges(input_string):
@@ -27,10 +37,24 @@ def count_fully_contained_ranges(input_string):
     return result
 
 
+def count_overlapping_ranges(input_string):
+    lines = [x for x in input_string.split("\n") if x != ""]
+    result = 0
+    for line in lines:
+        ranges = parse_line(line)
+        if do_ranges_overlap(*ranges):
+            result += 1
+    return result
+
+
 if __name__ == "__main__":
     input04 = open("../input/input04").read()
+
     p1_answer = count_fully_contained_ranges(input04)
     print(f"(p1 answer) assignments where one range fully contains the other: {p1_answer}") # 459
+
+    p2_answer = count_overlapping_ranges(input04)
+    print(f"(p2 answer) assignments where one range overlaps the other: {p2_answer}") # 779
 
 
 ###########################
@@ -91,7 +115,27 @@ def test_does_one_range_fully_contain_the_other():
         assert expected == actual
 
 
+def test_do_ranges_overlap():
+    for ranges, expected in [
+        (((2,4), (6,8)), False),
+        (((2,3), (4,5)), False),
+        (((5,7), (7,9)), True),
+        (((2,8), (3,7)), True),
+        (((6,6), (4,6)), True),
+        (((2,6), (4,8)), True),
+    ]:
+        one, two = ranges
+        actual = do_ranges_overlap(one, two)
+        assert expected == actual
+
+
 def test_count_fully_contained_ranges():
     expected = 2
     actual = count_fully_contained_ranges(SAMPLE_INPUT)
+    assert expected == actual
+
+
+def test_count_overlapping_ranges():
+    expected = 4
+    actual = count_overlapping_ranges(SAMPLE_INPUT)
     assert expected == actual
