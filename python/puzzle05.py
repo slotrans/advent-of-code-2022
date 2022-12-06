@@ -38,11 +38,19 @@ def parse_commands(command_string):
     return out
 
 
-def run_commands_destructively(stacks, commands):
+def run_commands_destructively_p1(stacks, commands):
     for cmd in commands:
         for _ in range(cmd.move_crates):
             crate = stacks[cmd.from_stack].pop()
             stacks[cmd.to_stack].append(crate)
+
+
+def run_commands_destructively_p2(stacks, commands):
+    for cmd in commands:
+        crates_to_move_together = stacks[cmd.from_stack][(-1*cmd.move_crates):]
+        for _ in range(cmd.move_crates):
+            stacks[cmd.from_stack].pop()
+        stacks[cmd.to_stack] += crates_to_move_together
 
 
 def crates_on_top(stacks):
@@ -56,9 +64,14 @@ if __name__ == "__main__":
     input05 = open("../input/input05").read()
 
     stacks, commands = parse_input(input05)
-    run_commands_destructively(stacks, commands)
+    run_commands_destructively_p1(stacks, commands)
     p1_answer = crates_on_top(stacks)
     print(f"(p1 answer) crates on top spell: {p1_answer}") # QGTHFZBHV
+
+    stacks, commands = parse_input(input05)
+    run_commands_destructively_p2(stacks, commands)
+    p2_answer = crates_on_top(stacks)
+    print(f"(p2 answer) crates on top spell: {p2_answer}") # MGDMPSZTM
 
 
 
@@ -127,7 +140,7 @@ def test_parse_input():
     assert expected_commands == actual_commands
 
 
-def test_run_commands_destructively():
+def test_run_commands_destructively_p1():
     stacks = {
         1: ["Z", "N"],
         2: ["M", "C", "D"],
@@ -144,9 +157,31 @@ def test_run_commands_destructively():
         2: ["M"],
         3: ["P", "D", "N", "Z"],        
     }
-    run_commands_destructively(stacks, commands)
+    run_commands_destructively_p1(stacks, commands)
     print(stacks)
     assert expected == stacks
+
+
+def test_run_commands_destructively_p2():
+    stacks = {
+        1: ["Z", "N"],
+        2: ["M", "C", "D"],
+        3: ["P"],
+    }
+    commands = [
+        Command(1, 2, 1),
+        Command(3, 1, 3),
+        Command(2, 2, 1),
+        Command(1, 1, 2),
+    ]
+    expected = {
+        1: ["M"],
+        2: ["C"],
+        3: ["P", "Z", "N", "D"],        
+    }
+    run_commands_destructively_p2(stacks, commands)
+    print(stacks)
+    assert expected == stacks    
 
 
 def test_crates_on_top():
