@@ -40,13 +40,31 @@ def directory_sizes_from_file_set(file_set):
     return sizes
 
 
+def smallest_directory_to_delete(dir_sizes):
+    total_space = 70000000
+    free_space_needed = 30000000
+    used_space = dir_sizes[("/",)]
+    unused_space = total_space - used_space
+    minimum_delete_size = free_space_needed - unused_space
+
+    for dir_tuple, total_size in sorted(dir_sizes.items(), key=lambda e: e[1]):
+        if total_size >= minimum_delete_size:
+            return dir_tuple
+
+    raise ValueError("no suitable directory found")
+
+
 if __name__ == "__main__":
     input07 = open("../input/input07").read()
 
     file_set = file_set_from_terminal_log(input07)
     dir_sizes = directory_sizes_from_file_set(file_set)
     p1_answer = sum([size for size in dir_sizes.values() if size <= 100000])
-    print(f"(p1 answer) total size of dirs that are each at most 100000 in size: {p1_answer}") # 
+    print(f"(p1 answer) total size of dirs that are each at most 100000 in size: {p1_answer}") # 1583951
+
+    dir_to_delete = smallest_directory_to_delete(dir_sizes)
+    size_of_dir_to_delete = dir_sizes[dir_to_delete]
+    print(f"(p2 answer) directory to delete {dir_to_delete} has size {size_of_dir_to_delete}") # 214171
 
 
 #######################################
@@ -108,4 +126,10 @@ def test_directory_sizes_from_file_set():
     }
     actual = directory_sizes_from_file_set(file_set_from_terminal_log(SAMPLE_INPUT))
     print(actual)
+    assert expected == actual
+
+
+def test_smallest_directory_to_delete():
+    expected = ("/", "d")
+    actual = smallest_directory_to_delete(directory_sizes_from_file_set(file_set_from_terminal_log(SAMPLE_INPUT)))
     assert expected == actual
