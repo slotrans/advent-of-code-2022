@@ -45,12 +45,61 @@ def count_visible_from_outside(tree_grid):
     return visible
 
 
+def scenic_score(tree_grid, y, x):
+    this = tree_grid[y][x]
+
+    trees_above = 0
+    for other in reversed(above(tree_grid, y, x)):
+        trees_above += 1
+        if other >= this:
+            break
+
+    trees_below = 0
+    for other in below(tree_grid, y, x):
+        trees_below += 1
+        if other >= this:
+            break
+
+    trees_to_left = 0
+    for other in reversed(to_left(tree_grid, y, x)):
+        trees_to_left += 1
+        if other >= this:
+            break
+
+    trees_to_right = 0
+    for other in to_right(tree_grid, y, x):
+        trees_to_right += 1
+        if other >= this:
+            break
+
+    return trees_above * trees_below * trees_to_left * trees_to_right
+
+
+def max_scenic_score(tree_grid):
+    height = len(tree_grid)
+    width = len(tree_grid[0])
+
+    best = 0
+
+    # not worth testing the outer edge because multiply-by-zero
+    # ignore the first and last rows
+    for y in range(1, height-1):
+        # ignore the left- and right-most columns
+        for x in range(1, width-1):
+            best = max(best, scenic_score(tree_grid, y, x))
+
+    return best
+
+
 if __name__ == "__main__":
     input08 = open("../input/input08").read()
 
     tree_grid = tree_grid_from_input_string(input08)
     visible_outside = count_visible_from_outside(tree_grid)
     print(f"(p1 answer) how many trees are visible from outside the grid? {visible_outside}") # 1835
+
+    best_score = max_scenic_score(tree_grid)
+    print(f"(p2 answer) What is the highest scenic score possible for any tree? {best_score}") # 263670
 
 
 ###################################
@@ -116,3 +165,14 @@ def test_to_right():
     assert [3, 2] == to_right(tree_grid, 2, 2)
     assert [9] == to_right(tree_grid, 3, 3)
     assert [] == to_right(tree_grid, 4, 4)
+
+
+def test_scenic_score():
+    tree_grid = tree_grid_from_input_string(SAMPLE_INPUT)
+    assert 4 == scenic_score(tree_grid, 1, 2) # first example
+    assert 8 == scenic_score(tree_grid, 3, 2) # second example
+
+
+def test_max_scenic_score():
+    tree_grid = tree_grid_from_input_string(SAMPLE_INPUT)
+    assert 8 == max_scenic_score(tree_grid)
