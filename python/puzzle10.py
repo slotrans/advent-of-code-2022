@@ -10,13 +10,29 @@ def instructions_from_input(input_string):
     return out
 
 
-def increment_cycle(current_cycle, x, reports):
+def increment_cycle(current_cycle, x, reports): # mutating an argument! gross!
     FIRST_REPORT_AT = 20
     REPORT_INTERVAL = 40
 
     out_cycle = current_cycle + 1
     if out_cycle == FIRST_REPORT_AT or (out_cycle - FIRST_REPORT_AT) % REPORT_INTERVAL == 0:
         reports.append(out_cycle * x)
+
+    return out_cycle
+
+
+def increment_cycle2(current_cycle, x, line_buffer, screen): # again: gross
+    SCREEN_WIDTH = 40
+
+    out_cycle = current_cycle + 1
+    x_position = (out_cycle - 1) % SCREEN_WIDTH
+    if x-1 <= x_position <= x+1: # 3 pixels covered by the sprite
+        line_buffer[x_position] = "#"
+
+    if out_cycle % SCREEN_WIDTH == 0:
+        screen.append("".join(line_buffer))
+        for i in range(len(line_buffer)):
+            line_buffer[i] = "."
 
     return out_cycle
 
@@ -38,6 +54,27 @@ def run_and_report_signal_strengths(instruction_list):
     return signal_strength_reports
 
 
+def render_instructions(instruction_list):
+    screen = []
+    line_buffer = list("." * 40)
+    x = 1
+    cycle = 0
+    for instruction in instruction_list:
+        if instruction[0] == "noop":
+            cycle = increment_cycle2(cycle, x, line_buffer, screen)
+        elif instruction[0] == "addx":
+            cycle = increment_cycle2(cycle, x, line_buffer, screen)
+            cycle = increment_cycle2(cycle, x, line_buffer, screen)
+
+            v = instruction[1]
+            x = x + v
+
+    out = ""
+    for line in screen:
+        out += line + "\n"
+    return out
+
+
 if __name__ == "__main__":
     input10 = open("../input/input10").read()
 
@@ -45,6 +82,10 @@ if __name__ == "__main__":
     signal_strength_reports = run_and_report_signal_strengths(instructions)
     sum_of_signal_strengths = sum(signal_strength_reports)
     print(f"(p1 answer) sum of signal strength reports: {sum_of_signal_strengths}") # 11820
+
+    rendered_screen = render_instructions(instructions)
+    print(f"(p2 answer found in the following...) What eight capital letters appear on your CRT?")
+    print(rendered_screen) # EPJBRKAH
 
 
 ####################################
@@ -256,3 +297,17 @@ def test_increment_cycle_at_59():
     assert 60 == cycle
     assert 1 == x
     assert [20, 60] == reports
+
+
+def test_render_instructions():
+    expected = """\
+##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"""
+    actual = render_instructions(instructions_from_input(LARGE_SAMPLE_INPUT))
+    print(actual)
+    assert expected == actual
