@@ -62,12 +62,69 @@ def count_excluded_points_in_row(sensor_beacon_pairs, fixed_y):
     return len([1 for k,v in row_points.items() if v in ["#", "S"]])
 
 
+def is_point_in_any_sensor_range(sensor_beacon_pairs, point):
+    for sensor, beacon in sensor_beacon_pairs:
+        sensor_beacon_mdist = get_manhattan_distance(sensor, beacon)
+        sensor_point_mdist = get_manhattan_distance(sensor, point)
+        if sensor_point_mdist <= sensor_beacon_mdist:
+            return True
+
+    return False
+
+
+def points_just_outside_range(sensor, beacon):
+    points = []
+
+    sensor_beacon_mdist = get_manhattan_distance(sensor, beacon)
+    target_distance = sensor_beacon_mdist + 1
+
+    # W corner to N corner
+    for i in range(-1*target_distance, 0):
+        p = Point(x=sensor.x+i, y=sensor.y-(target_distance+i))
+        points.append(p)
+    # N corner to E corner
+    for i in range(0, target_distance+1):
+        p = Point(x=sensor.x+i, y=sensor.y-(target_distance-i))
+        points.append(p)
+    # E corner to S corner
+    for i in range(target_distance, 0, -1):
+        p = Point(x=sensor.x+i, y=sensor.y+(target_distance-i))
+        points.append(p)
+    # S corner to W corner
+    for i in range(0, -1*target_distance-1, -1):
+        p = Point(x=sensor.x+i, y=sensor.y+(target_distance+i))
+        points.append(p)
+
+    return points
+
+
+def find_distress_beacon(sensor_beacon_pairs, min_coord, max_coord):
+    candidate_points = set()
+    for sensor, beacon in sensor_beacon_pairs:
+        print(f"looking just beyond S={sensor} B={beacon}")
+        candidate_points.update(points_just_outside_range(sensor, beacon))
+        for p in list(candidate_points):
+            if min(p.x, p.y) < min_coord or max(p.x, p.y) > max_coord: # idk how necessary this is
+                candidate_points.discard(p)
+            elif is_point_in_any_sensor_range(sensor_beacon_pairs, p):
+                candidate_points.discard(p)
+
+    if len(candidate_points) == 1:
+        return candidate_points.pop()
+    else:
+        raise Exception(f"candidate_points length != 1: {candidate_points}")
+
+
 if __name__ == "__main__":
     input15 = open("../input/input15").read()
 
     sensor_beacon_pairs = sensor_beacon_pairs_from_input(input15)
-    excluded_points = count_excluded_points_in_row(sensor_beacon_pairs, 2000000)
-    print(f"(p1 answer) In the row where y=2000000, how many positions cannot contain a beacon? {excluded_points}") # 4502208
+    #excluded_points = count_excluded_points_in_row(sensor_beacon_pairs, 2000000)
+    #print(f"(p1 answer) In the row where y=2000000, how many positions cannot contain a beacon? {excluded_points}") # 4502208
+
+    distress_beacon_location = find_distress_beacon(sensor_beacon_pairs, 0, 4000000)
+    tuning_frequency = 4000000*distress_beacon_location.x + distress_beacon_location.y
+    print(f"(p2 answer) What is the distress beacon's tuning frequency? {tuning_frequency}") # 13784551204480
 
 
 ##############################
@@ -128,4 +185,50 @@ def test_count_excluded_points_in_row():
     expected = 26
     sensor_beacon_pairs = sensor_beacon_pairs_from_input(SAMPLE_INPUT)
     actual = count_excluded_points_in_row(sensor_beacon_pairs, 10)
+    assert expected == actual
+
+
+def test_is_point_in_any_sensor_range():
+    sensor_beacon_pairs = sensor_beacon_pairs_from_input(SAMPLE_INPUT)
+
+    for point, expected in [
+        (Point(13,10), True),
+        (Point(13,11), True),
+        (Point(13,12), True),
+        (Point(14,10), True),
+        (Point(14,11), False), # solution point for sample
+        (Point(14,12), True),
+        (Point(15,10), True),
+        (Point(15,11), True),
+        (Point(15,12), True),
+    ]:
+        actual = is_point_in_any_sensor_range(sensor_beacon_pairs, point)
+        assert expected == actual
+
+
+def test_points_just_outside_range():
+    sensor = Point(0, 0)
+    beacon = Point(0, 2)
+    expected = [
+        Point(0, -3),
+        Point(1, -2),
+        Point(2, -1),
+        Point(3, 0),
+        Point(2, 1),
+        Point(1, 2),
+        Point(0, 3),
+        Point(-1, 2),
+        Point(-2, 1),
+        Point(-3, 0),
+        Point(-2, -1),
+        Point(-1, -2),
+    ]
+    actual = points_just_outside_range(sensor, beacon)
+    assert set(expected) == set(actual)
+
+
+def test_find_distress_beacon():
+    expected = Point(x=14, y=11)
+    sensor_beacon_pairs = sensor_beacon_pairs_from_input(SAMPLE_INPUT)
+    actual = find_distress_beacon(sensor_beacon_pairs, 0, 20)
     assert expected == actual
