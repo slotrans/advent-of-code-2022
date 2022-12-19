@@ -148,6 +148,12 @@ if __name__ == "__main__":
         print(f"### z={z} ####################################")
         print_grid_slice(grid, z)
     # printing it, the lava droplet appears to have a hollow center
+
+    # I think the idea is roughly this:
+    #   1. establish a bounding box around the droplet, at least 1 unit larger on each side
+    #   2. pick a point inside the box but outside the droplet
+    #   3. mark that point as "steam" or whatever then recursively spread to all neighboring empty points
+    #   4. after this process stops (runs out of empty points), count lava faces that are touching "steam"
     
 
 ###########################
