@@ -1,4 +1,7 @@
+import sys
 from collections import namedtuple
+
+sys.setrecursionlimit(10000)
 
 Cube = namedtuple("Cube", ["x","y","z"])
 
@@ -27,11 +30,35 @@ def count_exposed_sides(coords, grid):
     return exposed_sides
 
 
+def count_sides_touching_steam(coords, grid):
+    exposed_sides = 0
+    for dx, dy, dz in [
+        (-1,  0,  0),
+        (+1,  0,  0),
+        ( 0, -1,  0),
+        ( 0, +1,  0),
+        ( 0,  0,  -1),
+        ( 0,  0,  +1),
+    ]:
+        if grid.get(Cube(coords.x+dx, coords.y+dy, coords.z+dz)) == "S":
+            exposed_sides += 1
+    
+    return exposed_sides    
+
+
 def lava_droplet_surface_area(grid):
     surface_area = 0
     for cube, content in grid.items():
         if content == "L":
             surface_area += count_exposed_sides(cube, grid)
+    return surface_area
+
+
+def lava_droplet_surface_area_touching_steam(grid):
+    surface_area = 0
+    for cube, content in grid.items():
+        if content == "L":
+            surface_area += count_sides_touching_steam(cube, grid)
     return surface_area
 
 
@@ -77,7 +104,7 @@ def is_pocket(coords, grid):
     return grid.get(coords) is None and 0 == count_exposed_sides(coords, grid)
 
 
-def mark_air_pockets(grid): # mutates the grid!
+def get_bounds(grid):
     bounds = {
         "min_x": 9999,
         "min_y": 9999,
@@ -95,12 +122,43 @@ def mark_air_pockets(grid): # mutates the grid!
         bounds["max_y"] = max(bounds["max_y"], c.y)
         bounds["max_z"] = max(bounds["max_z"], c.z)
 
+    return bounds    
+
+
+def mark_air_pockets(grid): # mutates the grid!
+    bounds = get_bounds(grid)
+
     for x in range(bounds["min_x"], bounds["max_x"]+1):
         for y in range(bounds["min_y"], bounds["max_y"]+1):
             for z in range(bounds["min_z"], bounds["max_z"]+1):
                 coords = Cube(x,y,z)
                 if grid.get(coords) is None and is_interior_point(coords, grid, bounds):
                     grid[coords] = "A" # A for air
+
+
+def expand_steam(coords, grid, bounds): # mutates the grid!
+    print(f"steam expanding to {coords}")
+    if (
+        coords.x < bounds["min_x"] or coords.y < bounds["min_y"] or coords.z < bounds["min_z"] or
+        coords.x > bounds["max_x"] or coords.y > bounds["max_y"] or coords.z > bounds["max_z"]
+    ):
+        return
+
+    if grid.get(coords) is None:
+        grid[coords] = "S"
+    else:
+        return
+
+    for dx, dy, dz in [
+        (-1,  0,  0),
+        (+1,  0,  0),
+        ( 0, -1,  0),
+        ( 0, +1,  0),
+        ( 0,  0,  -1),
+        ( 0,  0,  +1),
+    ]:
+        adjacent_point = Cube(coords.x+dx, coords.y+dy, coords.z+dz)
+        expand_steam(adjacent_point, grid, bounds)                    
 
 
 def print_grid_slice(grid, fixed_z):
@@ -135,7 +193,7 @@ if __name__ == "__main__":
     #print(f"(p1 answer) What is the surface area of your scanned lava droplet? {p1_answer}") # 4450
 
     #mark_air_pockets(grid)
-    p2_answer = lava_droplet_surface_area(grid)
+    #p2_answer = lava_droplet_surface_area(grid)
     #print(f"(p2 answer) What is the exterior surface area of your scanned lava droplet? {p2_answer}") # 
     
     # first wrong attempt: 4216 (too high)
@@ -144,9 +202,9 @@ if __name__ == "__main__":
     # second wrong attempt: 2536 (too low)
     #   not sure what's wrong here
 
-    for z in range(21+1):
-        print(f"### z={z} ####################################")
-        print_grid_slice(grid, z)
+    #for z in range(21+1):
+    #    print(f"### z={z} ####################################")
+    #    print_grid_slice(grid, z)
     # printing it, the lava droplet appears to have a hollow center
 
     # I think the idea is roughly this:
@@ -155,6 +213,19 @@ if __name__ == "__main__":
     #   3. mark that point as "steam" or whatever then recursively spread to all neighboring empty points
     #   4. after this process stops (runs out of empty points), count lava faces that are touching "steam"
     
+    bounds = get_bounds(grid)
+    bounds["min_x"] -= 1
+    bounds["min_y"] -= 1
+    bounds["min_z"] -= 1
+    bounds["max_x"] += 1
+    bounds["max_y"] += 1
+    bounds["max_z"] += 1
+    expand_steam(Cube(0,0,0), grid, bounds)
+    p2_answer = lava_droplet_surface_area_touching_steam(grid)
+    print(f"(p2 answer) What is the exterior surface area of your scanned lava droplet? {p2_answer}") # 2564
+
+    # leaving this file in a messy state with some untested functions... sigh
+
 
 ###########################
 
