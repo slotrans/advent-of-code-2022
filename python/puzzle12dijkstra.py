@@ -78,7 +78,14 @@ if __name__ == "__main__":
 
     grid = grid_from_input(input12)
     shortest_path_length = min_steps_to_end(grid, grid.START)
-    print(f"shortest path: {shortest_path_length}") # 339
+    print(f"(p1 answer) shortest path from S: {shortest_path_length}") # 339
+
+    for point, height in grid.items():
+        if height == 1:
+            path_length = min_steps_to_end(grid, point)
+            print(f"  shortest path from {point} to E: {path_length}")
+            shortest_path_length = min(path_length, shortest_path_length)
+    print(f"(p2 answer)shortest path from any height=1 square: {shortest_path_length}") # 332
 
 
 ####################################
