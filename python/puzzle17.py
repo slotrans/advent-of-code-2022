@@ -163,3 +163,8 @@ def test_first_10():
     expected = 17
     actual = height_after_n_rocks(jet_pattern=SAMPLE_INPUT, num_rocks=10, do_output=True)
     assert expected == actual
+
+def test_height_after_n_rocks_p2():
+    expected = 1514285714288
+    actual = height_after_n_rocks(jet_pattern=SAMPLE_INPUT, num_rocks=1000000000000, do_output=False)
+    assert expected == actual
