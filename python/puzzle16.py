@@ -72,10 +72,50 @@ def most_pressure_released(graph, time_limit):
     return pressure_released_recursive(
         rates_map=rates_map,
         distance_map=distance_map, 
-        time_remaining=30,
+        time_remaining=time_limit,
         current_valve="AA",
         remaining_valve_set=valves_to_open,
     )
+
+
+def most_pressure_released_2workers(graph, time_limit):
+    rates_map = networkx.get_node_attributes(graph, "rate")
+
+    valves_to_open = get_openable_valves(graph)
+    distance_map = build_distance_map(graph, valves_to_open)
+
+    if len(valves_to_open) % 2 == 0:
+        my_half_size = len(valves_to_open) // 2
+    else:
+        my_half_size = len(valves_to_open) // 2 + 1
+
+    possibilities = []
+    for c in itertools.combinations(valves_to_open, my_half_size):
+        half_for_me = set(c)
+        half_for_elephant = valves_to_open.difference(half_for_me)
+        possibilities.append((half_for_me, half_for_elephant))
+
+    return max([
+        (   
+            pressure_released_recursive(
+                rates_map=rates_map,
+                distance_map=distance_map,
+                time_remaining=time_limit,
+                current_valve="AA",
+                remaining_valve_set=valves_for_me,
+            )
+            +
+            pressure_released_recursive(
+                rates_map=rates_map,
+                distance_map=distance_map,
+                time_remaining=time_limit,
+                current_valve="AA",
+                remaining_valve_set=valves_for_elephant,
+            )
+        )
+        for valves_for_me, valves_for_elephant
+        in possibilities
+    ])
 
 
 if __name__ == "__main__":
@@ -85,6 +125,9 @@ if __name__ == "__main__":
 
     p1_answer = most_pressure_released(graph=valve_graph, time_limit=30)
     print(f"most pressure that can be released: {p1_answer}") # 2029
+
+    p2_answer = most_pressure_released_2workers(graph=valve_graph, time_limit=26)
+    print(f"most pressure that can be released by me & the elephant working together: {p2_answer}") # 2723
 
 
 
@@ -208,4 +251,11 @@ def test_most_pressure_released():
     graph = graph_from_input(SAMPLE_INPUT)
     expected = 1651
     actual = most_pressure_released(graph, 30)
+    assert expected == actual
+
+
+def test_most_pressure_released_2workers():
+    graph = graph_from_input(SAMPLE_INPUT)
+    expected = 1707
+    actual = most_pressure_released_2workers(graph, 26)
     assert expected == actual
